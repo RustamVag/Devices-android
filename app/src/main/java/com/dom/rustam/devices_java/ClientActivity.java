@@ -1,6 +1,7 @@
 package com.dom.rustam.devices_java;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -12,8 +13,10 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
+import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -28,6 +31,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -39,6 +43,7 @@ public class ClientActivity extends AppCompatActivity {
     NetworkServiceHelper networkServiceHelper;
     BroadcastReceiver br;
     Boolean bound;
+    Context context;
 
     // Константы
     final int TASK_CODE = 1;
@@ -47,6 +52,7 @@ public class ClientActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
+        context = this;
 
         logoText = findViewById(R.id.logoText);
 
@@ -145,6 +151,10 @@ public class ClientActivity extends AppCompatActivity {
                 // intent2.putExtra("address", this.address);
                 startActivity(intent2);
                 break;
+            case R.id.downloads:
+                String path = Environment.getExternalStorageDirectory().toString();
+                Intent filesIntent = new Intent(Intent.ACTION_PICK, Uri.parse(path));
+                startActivity(filesIntent);
             case R.id.close:
                 Intent serviceIntent = new Intent(this, NetworkService.class);
                 stopService(serviceIntent);

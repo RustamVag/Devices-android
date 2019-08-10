@@ -224,7 +224,15 @@ public class OpenFileDialog extends AlertDialog.Builder {
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView view = (TextView) super.getView(position, convertView, parent);
             File file = getItem(position);
-            view.setText(file.getName());
+            if (file.isDirectory()){
+                view.setText(file.getName() + "/");
+                view.setTextColor(getContext().getResources().getColor(R.color.colorFolder));
+            }
+            else {
+                view.setText(file.getName());
+                view.setTextColor(getContext().getResources().getColor(R.color.colorDark));
+            }
+
             return view;
         }
     }

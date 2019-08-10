@@ -4,8 +4,8 @@
         android:title="Настройки" />
     <item android:id="@+id/devices"
         android:title="Устройства" />
-    <item android:id="@+id/discover"
-        android:title="Найти" />
+    <item android:id="@+id/downloads"
+        android:title="Загрузки" />
     <item android:id="@+id/close"
         android:title="Отключиться" />
 </menu>
