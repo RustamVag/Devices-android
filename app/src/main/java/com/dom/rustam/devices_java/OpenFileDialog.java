@@ -38,10 +38,14 @@ public class OpenFileDialog extends AlertDialog.Builder {
     private int selectedIndex = -1;
     private OpenDialogListener listener;
 
+    // Пути
+    public static String PATH_DOWNLOADS = Environment.getExternalStorageDirectory().getPath() + "/Devices-downloads"; // загрузки
+    public static String PATH_DEFAULT = Environment.getExternalStorageDirectory().getPath();
 
     // Конструктор
-    public OpenFileDialog(Context context) {
+    public OpenFileDialog(Context context, String path) {
         super(context);
+        if (path.length() >0) currentPath = path; // задаем папку если она указана
         title = createTitle(context);
         changeTitle();
         LinearLayout linearLayout = createMainLayout(context);
@@ -55,6 +59,8 @@ public class OpenFileDialog extends AlertDialog.Builder {
                 .setPositiveButton(android.R.string.ok, null)
                 .setNegativeButton(android.R.string.cancel, null);
     }
+
+
 
     // ---------------------------- Основные методы ---------------------
 

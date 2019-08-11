@@ -152,9 +152,19 @@ public class ClientActivity extends AppCompatActivity {
                 startActivity(intent2);
                 break;
             case R.id.downloads:
-                String path = Environment.getExternalStorageDirectory().toString();
-                Intent filesIntent = new Intent(Intent.ACTION_PICK, Uri.parse(path));
-                startActivity(filesIntent);
+                //String path = Environment.getExternalStorageDirectory().toString();
+                final OpenFileDialog fileDialog = new OpenFileDialog(context, OpenFileDialog.PATH_DOWNLOADS); // открываем загрузки приложения
+                final Dialog dialog = fileDialog.create();
+                // файл выбран
+                fileDialog.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
+                    @Override
+                    public void OnSelectedFile(String fileName) {
+                        dialog.dismiss();
+                        Toast.makeText(context, fileName, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                dialog.show();
+                break;
             case R.id.close:
                 Intent serviceIntent = new Intent(this, NetworkService.class);
                 stopService(serviceIntent);

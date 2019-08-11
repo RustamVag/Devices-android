@@ -189,7 +189,7 @@ public class OnlineActivity extends AppCompatActivity {
                         return true;
                     case R.id.action_file:
                         //Toast.makeText(getApplicationContext(), "Отправка файла", Toast.LENGTH_SHORT).show();
-                        final OpenFileDialog fileDialog = new OpenFileDialog(context);
+                        final OpenFileDialog fileDialog = new OpenFileDialog(context, OpenFileDialog.PATH_DEFAULT); // путь по умолчанию
                         final Dialog dialog = fileDialog.create();
                         // файл выбран
                         fileDialog.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
