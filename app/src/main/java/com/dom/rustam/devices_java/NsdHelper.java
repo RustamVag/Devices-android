@@ -131,7 +131,7 @@ public class NsdHelper {
                 service.address = address;
 
                 Toast.makeText(mContext, "Подключено к " + serviceInfo.getHost().toString().substring(1), Toast.LENGTH_SHORT).show();
-                uiMessage = "Клиент";
+                uiMessage = Constants.LOGO_CLIENT;
                 // Если устройство с  режима сервера переходит на клиент
                 if (service.status == NetworkService.STATUS_SERVER) {
                     service.onChangeConnectionMode();
@@ -158,7 +158,7 @@ public class NsdHelper {
                 }
                 else {
                     Toast.makeText(mContext, "Сервис " + nsdServiceInfo.getServiceName() + " запущен", Toast.LENGTH_SHORT).show();
-                    uiMessage = "Сервер";
+                    uiMessage = Constants.LOGO_SERVER;
                     service.updateLogo(uiMessage);
                     service.startServer();
                     connectToSelf(); // Подключаемся к самому себе

@@ -45,4 +45,7 @@ public class Constants {
     public static String PATH_DOWNLOADS = "/Devices-downloads/";
     public static String DEFAULT_FILE_NAME = "devices-file.txt";
     public static String FILE_NAME_SEPARATOR = "|";
+
+    public static String LOGO_SERVER = "Сервер";
+    public static String LOGO_CLIENT = "Клиент";
 }

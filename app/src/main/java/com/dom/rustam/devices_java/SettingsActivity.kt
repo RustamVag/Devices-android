@@ -17,7 +17,7 @@ class SettingsActivity : AppCompatActivity() {
 
     lateinit var settings:Settings // Класс для работы с настройками
     lateinit var pref:SharedPreferences
-    lateinit var colorPicker:ColorPickerView
+    lateinit var colorPicker: ColorPickerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +31,7 @@ class SettingsActivity : AppCompatActivity() {
         colorPicker.preferenceName = "ColorPickerView"
 
         // Выбор цвета
-        colorPickerView.setColorListener(object:ColorListener {
+        colorPicker.setColorListener(object:ColorListener {
             override fun onColorSelected(colorEnvelope: ColorEnvelope) {
                 settings.color = colorEnvelope.color
                 colorTextView.setTextColor(settings.color)

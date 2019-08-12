@@ -28,6 +28,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +39,7 @@ import java.util.Date;
 public class ClientActivity extends AppCompatActivity {
 
     TextView logoText;
+    ImageView logoIcon;
     ServiceConnection sConn;
     NetworkService service;
     NetworkServiceHelper networkServiceHelper;
@@ -55,6 +57,7 @@ public class ClientActivity extends AppCompatActivity {
         context = this;
 
         logoText = findViewById(R.id.logoText);
+        logoIcon = findViewById(R.id.modeLogo);
 
         // Создаем приемник сообщений
         br = new BroadcastReceiver() {
@@ -107,6 +110,12 @@ public class ClientActivity extends AppCompatActivity {
         }
         if (resultCode == Constants.STATUS_LOGO) { // Обновляем лого
             String result = data.getStringExtra(Constants.PARAM_RESULT);
+            if (result.contains(Constants.LOGO_SERVER)) {
+                logoIcon.setImageDrawable(getResources().getDrawable(R.drawable.server));
+            }
+            if (result.contains(Constants.LOGO_CLIENT)) {
+                logoIcon.setImageDrawable(getResources().getDrawable(R.drawable.client2));
+            }
             logoText.setText(result);
         }
         if (resultCode == Constants.STATUS_MESSAGE) { // отправка сообщений отключена в коде сервиса

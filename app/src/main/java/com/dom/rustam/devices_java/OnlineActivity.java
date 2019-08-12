@@ -196,9 +196,14 @@ public class OnlineActivity extends AppCompatActivity {
                             @Override
                             public void OnSelectedFile(String fileName) {
                                 dialog.dismiss();
-                                Toast.makeText(context, fileName, Toast.LENGTH_SHORT).show();
-                                Device device = devices.get(position);
-                                service.sendToServer(Constants.SEND_FILE + " " + device.getId() + " " + Helper.fileToString(fileName));
+                                File file = new File(fileName);
+                                if (file.length() > 1024*1024*10) {
+                                    Toast.makeText(context, "Файл больше 10 МБ", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(context, fileName, Toast.LENGTH_SHORT).show();
+                                    Device device = devices.get(position);
+                                    service.sendToServer(Constants.SEND_FILE + " " + device.getId() + " " + Helper.fileToString(fileName));
+                                }
                             }
                         });
                         dialog.show();

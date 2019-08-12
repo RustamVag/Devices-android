@@ -1,17 +1,21 @@
 package com.dom.rustam.devices_java;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.NetworkOnMainThreadException;
 import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
 
@@ -35,6 +39,8 @@ public class NetworkService extends Service {
     String address = "";
     MyBinder binder = new MyBinder();
     PendingIntent pi;
+    NotificationManager notificationManager;
+    Context context;
 
     public static int STATUS_OFFLINE = 1;
     public static int STATUS_CLIENT = 2;
@@ -43,6 +49,8 @@ public class NetworkService extends Service {
     public static int STATUS_RECONNECT = 5;
     int status = STATUS_OFFLINE; // Текущее состояние службы
     int currentPosition = 0; // Текущее проложение девайса
+
+    String CHANNEL_ID = "foreground";
 
 
     public NetworkService() {
@@ -94,8 +102,29 @@ public class NetworkService extends Service {
         // Помещаем службу на передний план
         Intent notificationIntent = new Intent(this, ClientActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        Notification notification = new NotificationCompat.Builder(this).setSmallIcon(R.drawable.dev).setContentTitle("Устройства").setContentText("Подключено к сети").setContentIntent(pendingIntent).build();
-        startForeground(1, notification);
+        context = getApplicationContext();
+        // Создаем уведомление для переднего плана
+        notificationManager = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
+        // Для Android 8.0 и выше создаем канал
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Сеть", NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("Служба Devices запущена.");
+            channel.enableLights(true);
+            channel.setLightColor(Color.RED);
+            channel.enableVibration(false);
+            notificationManager.createNotificationChannel(channel);
+            Notification notification = new NotificationCompat.Builder(this).setSmallIcon(R.drawable.dev)
+                    .setContentTitle("Устройства")
+                    .setContentText("Подключено к сети")
+                    .setChannelId(CHANNEL_ID)
+                    .setContentIntent(pendingIntent)
+                    .build();
+            startForeground(1, notification);
+        }
+        else {
+            Notification notification = new NotificationCompat.Builder(this).setSmallIcon(R.drawable.dev).setContentTitle("Устройства").setContentText("Подключено к сети").setContentIntent(pendingIntent).build();
+            startForeground(1, notification);
+        }
     }
 
     // Запуск службы
@@ -267,8 +296,25 @@ public class NetworkService extends Service {
         }
     }
 
-    // Отправить сообщение на сервер
+    // Отправить сообщение на сервер в отдельном потоке
     public void sendToServer(final String msg) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if ((mTcpClient != null)) {
+                    if (mTcpClient.isRunning()) {
+                        String g = address;
+                        mTcpClient.sendMessage(msg);
+                    } else {
+                        connectToServer();
+                    }
+                } else {
+                    connectToServer();
+                }
+            }
+        });
+        thread.start();
+
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -284,7 +330,7 @@ public class NetworkService extends Service {
                 }
             }
         };
-        runnable.run();
+        //runnable.run();
     }
 
     // Обрабатываем ответ от сервера
