@@ -48,4 +48,6 @@ public class Constants {
 
     public static String LOGO_SERVER = "Сервер";
     public static String LOGO_CLIENT = "Клиент";
+
+    public static int BLOCK_SIZE = 65536; // 64кб
 }
