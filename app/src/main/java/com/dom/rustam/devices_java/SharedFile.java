@@ -1,6 +1,7 @@
 package com.dom.rustam.devices_java;
 
 import android.support.annotation.NonNull;
+import android.util.Base64;
 import android.util.Log;
 
 import java.io.DataInputStream;
@@ -19,6 +20,12 @@ public class SharedFile {
     private String name;
     private byte[] data;
     private ArrayList<FileBlock> blocks; // части файла
+
+    public int status;
+    public static int STATUS_CREATED = 0;
+    public static int STATUS_SENDING = 1;
+
+    public int currentBlockId = 0;
 
     public int getFileId() {
         return fileId;
@@ -91,5 +98,8 @@ class FileBlock {
     public FileBlock(int id, byte[] blockData) {
         this.blockId = id;
         this.data = blockData;
+    }
+    public String toBase64() {
+        return Base64.encodeToString(data, Base64.NO_WRAP);
     }
 }

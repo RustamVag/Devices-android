@@ -333,6 +333,10 @@ public class NetworkService extends Service {
         //runnable.run();
     }
 
+    public void sendSaredFile(SharedFile file) {
+
+    }
+
     // Обрабатываем ответ от сервера
     private void parseResponse(String message) {
         // Обрабатываем ответы сервера
