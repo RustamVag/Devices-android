@@ -199,6 +199,7 @@ public class OnlineActivity extends AppCompatActivity {
                                 sharedFile.generateBlocks();
                                 Device device = devices.get(position);
                                 service.sendToServer(Constants.SEND_FILE + " " + device.getId() + " " + Helper.fileToString(fileName));
+                                //TODO доработать отправку файла по частям
                             }
                         });
                         dialog.show();

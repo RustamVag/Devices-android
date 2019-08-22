@@ -25,7 +25,7 @@ public class SharedFile {
     public static int STATUS_CREATED = 0;
     public static int STATUS_SENDING = 1;
 
-    public int currentBlockId = 0;
+    public int currentBlockId = 1;
 
     public int getFileId() {
         return fileId;
@@ -83,8 +83,24 @@ public class SharedFile {
             blocks.add(new FileBlock(id, blockData));
             id++;
         }
+    }
 
-        //TODO Доработать передачу файла частями
+    public FileBlock readBlock() {
+        if (blocks != null) {
+            this.status = STATUS_SENDING; // меняем статус на отправку файла
+            return getBlockById(this.currentBlockId++); // Возвращаем текущий блок и переводим курсор на следующий
+        }
+        return null;
+    }
+
+
+    public FileBlock getBlockById(int blockId) {
+        for (FileBlock block : this.blocks) {
+            if (block.getBlockId() == blockId) {
+                return block;
+            }
+        }
+        return null;
     }
 
 
@@ -94,6 +110,22 @@ public class SharedFile {
 class FileBlock {
     private int blockId;
     private byte[] data;
+
+    public int getBlockId() {
+        return blockId;
+    }
+
+    public void setBlockId(int blockId) {
+        this.blockId = blockId;
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public void setData(byte[] data) {
+        this.data = data;
+    }
 
     public FileBlock(int id, byte[] blockData) {
         this.blockId = id;
