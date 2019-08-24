@@ -3,10 +3,15 @@ package com.dom.rustam.devices_java;
 import android.support.annotation.NonNull;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Xml;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -16,16 +21,19 @@ import java.util.ListIterator;
 // Файл отправляемый по сети
 public class SharedFile {
 
-    private int fileId;
+    private Integer fileId;
     private String name;
     private byte[] data;
     private ArrayList<FileBlock> blocks; // части файла
 
+    public Integer blocksCount;
+
     public int status;
     public static int STATUS_CREATED = 0;
     public static int STATUS_SENDING = 1;
+    public static int STATUS_RECIVING = 2;
 
-    public int currentBlockId = 1;
+    public Integer currentBlockId = 1;
 
     public int getFileId() {
         return fileId;
@@ -103,7 +111,49 @@ public class SharedFile {
         return null;
     }
 
+    public Integer getBlocksCount() {
+        return this.blocks.size();
+    }
 
+
+    public String toXMLDocument() {
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "file");
+            serializer.attribute("", "fileId", this.fileId.toString());
+            serializer.attribute("", "name", this.name);
+            //serializer.attribute("", "blockId", this.currentBlockId.toString());
+            //serializer.attribute("", "currentBlock", this.getBlockById(currentBlockId).toBase64());
+            serializer.attribute("", "blocksCount", this.getBlocksCount().toString());
+            serializer.endTag("", "file");
+            serializer.endDocument();
+            return writer.toString();
+        } catch (Exception e) {
+            Log.d("Ошибка: ", e.toString());
+        }
+        return "null";
+    }
+
+    public void parseXML(String xml) {
+        try {
+            XmlPullParser parser = XMLBuilder.prepareXpp(xml);
+            while (parser.getEventType()!= XmlPullParser.END_DOCUMENT) {
+                if (parser.getEventType() == XmlPullParser.START_TAG
+                        && parser.getName().equals("file")) {
+                    this.fileId = Integer.parseInt(parser.getAttributeValue(null, "fileId"));
+                    this.name = parser.getAttributeValue(null, "name");
+                    this.blocksCount = Integer.parseInt(parser.getAttributeValue(null, "blocksCount"));
+                    //this.currentBlockId = Integer.parseInt(parser.getAttributeValue(null, "blockId"));
+                    //this.addBlock(parser.getAttributeValue(null, "currentBlock"));
+                }
+                parser.next();
+            }
+        }
+        catch (Throwable t) { }
+    }
 
 }
 

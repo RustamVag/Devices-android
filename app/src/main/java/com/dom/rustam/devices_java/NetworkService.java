@@ -333,8 +333,8 @@ public class NetworkService extends Service {
         //runnable.run();
     }
 
-    public void sendSaredFile(SharedFile file) {
-
+    public void sendSaredFile(SharedFile file, Device device) {
+        sendToServer(Constants.SEND_FILE + " " + file.toXMLDocument());
     }
 
     // Обрабатываем ответ от сервера
