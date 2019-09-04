@@ -184,7 +184,7 @@ public class OnlineActivity extends AppCompatActivity {
 
                     case R.id.action_call:
                         //Toast.makeText(getApplicationContext(), "Вызов", Toast.LENGTH_SHORT).show();
-                        Device device = devices.get(position);
+                        final Device device = devices.get(position);
                         service.sendToServer(Constants.DEVICE_CALL + " " + Integer.toString(device.getId()));
                         return true;
                     case R.id.action_file:
@@ -195,10 +195,12 @@ public class OnlineActivity extends AppCompatActivity {
                         fileDialog.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
                             @Override
                             public void OnSelectedFile(String fileName) {
-                                SharedFile sharedFile = new SharedFile(fileName);
-                                sharedFile.generateBlocks();
                                 Device device = devices.get(position);
-                                service.sendToServer(Constants.SEND_FILE + " " + device.getId() + " " + Helper.fileToString(fileName));
+                                SharedFile sharedFile = new SharedFile(fileName, device.getId());
+                                sharedFile.setSendingDevice(service.getDevice().getId()); // задаем id текущего устройства
+                                sharedFile.generateBlocks();
+                                //service.sendToServer(Constants.SEND_FILE + " " + device.getId() + " " + Helper.fileToString(fileName));
+                                service.sendSaredFile(sharedFile);
                                 //TODO доработать отправку файла по частям
                             }
                         });

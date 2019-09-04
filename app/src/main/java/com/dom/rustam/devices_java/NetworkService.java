@@ -41,6 +41,12 @@ public class NetworkService extends Service {
     PendingIntent pi;
     NotificationManager notificationManager;
     Context context;
+    // на сервере
+    ArrayList<SharedFile> files;
+    int currentFileId = Constants.FIRST_FILE_ID; // 1 - начальный номер файла
+    // на клиенте
+    SharedFile clientFile; // отправляемый файл на клиенте
+    SharedFile recivingFile; // принимаемый файл
 
     public static int STATUS_OFFLINE = 1;
     public static int STATUS_CLIENT = 2;
@@ -54,12 +60,15 @@ public class NetworkService extends Service {
 
 
     public NetworkService() {
+        files = new ArrayList<SharedFile>(); // список файлов
     }
 
     // Возвращаем хелпер
     public NetworkServiceHelper getHelper() {
         return helper;
     }
+
+    public Device getDevice() { return this.device; }
 
 
     // Связываение сервиса с активити
@@ -333,13 +342,20 @@ public class NetworkService extends Service {
         //runnable.run();
     }
 
-    public void sendSaredFile(SharedFile file, Device device) {
-        sendToServer(Constants.SEND_FILE + " " + file.toXMLDocument());
+    public void sendSaredFile(SharedFile file) {
+        clientFile = file;
+        sendToServer(Constants.SEND_FILE_INFO + " " + file.toXMLDocument());
+    }
+
+    // отправка части файла
+    public void sendFileBlock(FileBlock block, Device device) {
+
     }
 
     // Обрабатываем ответ от сервера
     private void parseResponse(String message) {
         // Обрабатываем ответы сервера
+        int i = 5;
         if (beginAs(message, Constants.ONLINE)) { // Запрос онлайна
             message = message.substring(Constants.ONLINE.length() + 1); // Убираем -online из строки сообщения
             Online online = new Online(message);
@@ -361,8 +377,54 @@ public class NetworkService extends Service {
             if (Helper.stringToFile(fileName, message) == 1) { // сохранаем в файл пришедший ответ
                 sendBroadcast(Constants.RECIVE_FILE);
             }
+        }
+        else if (beginAs(message, Constants.FILE_ID)) { // Id файла получен
+            message = message.substring(Constants.FILE_ID.length() + 1);
+            clientFile.setFileId(Integer.parseInt(message)); // получаем id отправляемого файла
+            onReciveFileId();
+        }
+        else if (beginAs(message, Constants.SEND_FILE_INFO)) { // Id файла получен
+            message = message.substring(Constants.SEND_FILE_INFO.length() + 1);
+            recivingFile = new SharedFile();
+            recivingFile.parseXML(message);
+            int j = 5;
+        }
+        else if (beginAs(message, Constants.SEND_FILE_BLOCK)) { // Новый блок отправителю
+            String data = message.substring(Constants.SEND_FILE_BLOCK.length() +1); // Убираем тэг
+            FileBlock recivedBlock = new FileBlock();
+            recivedBlock.parseString(data);
+            if (recivingFile != null) {
+                recivingFile.blocks.add(recivedBlock);
+                if (recivingFile.blocks.size() < recivingFile.blocksCount) {  // если не все получили запрашиваем новый блок
+                    sendToServer(Constants.GET_NEW_BLOCK + " " + recivingFile.getFileId());
+                }
+                else { // если все блоки полкчены
+                    recivingFile.save(Environment.getExternalStorageDirectory().getPath() + Constants.PATH_DOWNLOADS); // сохраняем файл в указанной папке
+                    sendBroadcast(Constants.RECIVE_FILE); // сообщение о принятии файла
+                    recivingFile = null; // освобождаем память эксперимент
+                    //TODO проверить выполнение, я здесь
+                }
+            }
+        }
+        else if (beginAs(message, Constants.GET_NEW_BLOCK)) {
+            String data = message.substring(Constants.GET_NEW_BLOCK.length() +1);
+            int fileId = Integer.parseInt(data);
+            if (clientFile != null) {
+                FileBlock sendingBlock = clientFile.readBlock();
+                sendToServer(Constants.SEND_FILE_BLOCK + " " + sendingBlock.toString()); // отправляем следующий блок
+                Integer progress = Math.round((100*sendingBlock.getBlockId()/clientFile.getBlocksCount()));
+                sendBroadcast(Constants.BROADCAST_MESSAGE + " Отправка: " + progress.toString() + "%");
+                if (sendingBlock.getBlockId() == clientFile.blocksCount) clientFile = null; // освобождаем панять эксперимент
+            }
 
         }
+
+    }
+
+    // Id файла получен
+    private void onReciveFileId() {
+        FileBlock sendingBlock = clientFile.readBlock();
+        sendToServer(Constants.SEND_FILE_BLOCK + " " + sendingBlock.toString()); // отправляем первый блок
     }
 
 
@@ -422,6 +484,33 @@ public class NetworkService extends Service {
             data = data.substring(devId.toString().length() +1);
             mServer.sendMessageTo(devId, Constants.RECIVE_FILE + " " + data);
         }
+        else if (beginAs(message, Constants.SEND_FILE_INFO)) { // Новый файл
+            String data = message.substring(Constants.SEND_FILE_INFO.length() +1); // Убираем тэг
+            // регаем новый файл их xml
+            SharedFile sharedFile = new SharedFile();
+            sharedFile.parseXML(data);
+            sharedFile.setFileId(getCurrentFileId()); // присваиваем id файлу, осторожно - инкремент
+            files.add(sharedFile);
+            mServer.sendMessageTo(device.getId(), Constants.FILE_ID + " " + sharedFile.getFileId()); // Отправляем id клиенту
+            mServer.sendMessageTo(sharedFile.getTargetDevice(), Constants.SEND_FILE_INFO + " " + sharedFile.toXMLDocument()); // отправляем данные о файле получателю
+
+        }
+        else if (beginAs(message, Constants.SEND_FILE_BLOCK)) { // Новый файл
+            String data = message.substring(Constants.SEND_FILE_BLOCK.length() +1); // Убираем тэг
+            // формируем блок из xml
+            FileBlock recivedBlock = new FileBlock();
+            recivedBlock.parseString(data);
+            SharedFile file = findFileById(recivedBlock.getIdFile());
+            mServer.sendMessageTo(file.getTargetDevice(), Constants.SEND_FILE_BLOCK + " " + recivedBlock.toString());
+        }
+        else if (beginAs(message, Constants.GET_NEW_BLOCK)) {
+            String data = message.substring(Constants.GET_NEW_BLOCK.length() +1);
+            int fileId = Integer.parseInt(data);
+            SharedFile file = findFileById(fileId);
+            mServer.sendMessageTo(file.getSendingDevice(), message);
+        }
+
+
     }
 
     // Строка начинается со слова..
@@ -461,6 +550,21 @@ public class NetworkService extends Service {
     // Изменилось положение устройства
     private void onChangeDevicePosition(int position) {
         device.setPosition(position);
+    }
+
+
+    // ---------------------------------- Файлы --------------------------
+
+    private int getCurrentFileId() {
+        return currentFileId++;
+    }
+
+
+    private SharedFile findFileById(int fileId) {
+        for (SharedFile file : this.files) {
+            if (file.getFileId() == fileId) return file;
+        }
+        return null;
     }
 
 }

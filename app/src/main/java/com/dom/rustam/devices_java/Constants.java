@@ -14,8 +14,14 @@ public class Constants {
     public  static  String CLIENT = "-client";
     public static String DEVICE_UPDATED = "-deviceUpdated";
     public static String DEVICE_ID = "-deviceId";
+
+    // Обмен файлами
     public static String SEND_FILE = "-sendFile";
     public static String RECIVE_FILE = "-reciveFile";
+    public static String FILE_ID = "-fileId";
+    public static String SEND_FILE_INFO = "-sendInfoFile";
+    public static String SEND_FILE_BLOCK = "-sendBlockFile";
+    public static String GET_NEW_BLOCK = "-getNewBlock";
 
     // Общение между сервисом и активностями
     public final static String PARAM_PINTENT = "pendingIntent";
@@ -33,6 +39,7 @@ public class Constants {
     public static String BROADCAST_ONLINE = "com.dom.rustam.devices_java:broadcast_online";
     public  static  String BROADCAST_UPDATE_ONLINE = "-updateOnline";
     public static  String BROADCAST_CALL = "-call";
+    public static String BROADCAST_MESSAGE = "-brodcastMessage";
 
     // Прочтие константы
     public static String DEVICE_POSITION = "devicePosition";
@@ -49,5 +56,9 @@ public class Constants {
     public static String LOGO_SERVER = "Сервер";
     public static String LOGO_CLIENT = "Клиент";
 
-    public static int BLOCK_SIZE = 65536; // 64кб
+    public static int BLOCK_SIZE = 65536*8; // 512кб
+
+    //public static int BLOCK_SIZE = 128; // тест
+
+    public static int FIRST_FILE_ID = 1; // Номер первого отправляемого файла
 }

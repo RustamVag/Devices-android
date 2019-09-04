@@ -72,6 +72,11 @@ public class ClientActivity extends AppCompatActivity {
                 } else if (result.contains(Constants.RECIVE_FILE)){
                     Toast.makeText(getApplicationContext(), "Принят файл", Toast.LENGTH_SHORT).show();
                 }
+                 else if (result.contains(Constants.BROADCAST_MESSAGE)){
+                    String message = result.substring(Constants.BROADCAST_MESSAGE.length() +1); // убираем тег
+                    Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+                }
+
             }
         };
 
