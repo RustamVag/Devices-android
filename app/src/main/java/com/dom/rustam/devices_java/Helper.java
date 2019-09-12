@@ -51,4 +51,23 @@ public class Helper {
         return 1;
     }
 
+    public static String fileSize(long fileLength) {
+        if (fileLength < 1024) {
+            return String.valueOf(fileLength) + " B";
+        }
+        else if ((fileLength >=1024) && (fileLength < 1024*1024)) {
+            double size = fileLength/1024;
+            return String.format("%.2f KB", size); // выводим 2 знака после запятой
+        }
+        else if ((fileLength >=1024*1024) && (fileLength < 1024*1024*1024)) {
+            double size = fileLength/(1024*1024);
+            return String.format("%.2f MB", size);
+        }
+        else if (fileLength >= 1024*1024*1024) {
+            double size = fileLength/(1024*1024*1024);
+            return String.format("%.2f GB", size);
+        }
+        else return "?";
+    }
+
 }

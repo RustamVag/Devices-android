@@ -11,11 +11,13 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -45,7 +47,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
     // Конструктор
     public OpenFileDialog(Context context, String path) {
         super(context);
-        if (path.length() >0) currentPath = path; // задаем папку если она указана
+        if (path.length() > 0) currentPath = path; // задаем папку если она указана
         title = createTitle(context);
         changeTitle();
         LinearLayout linearLayout = createMainLayout(context);
@@ -61,11 +63,10 @@ public class OpenFileDialog extends AlertDialog.Builder {
     }
 
 
-
     // ---------------------------- Основные методы ---------------------
 
     // Получаем список файлов папки
-    private List<File> getFiles(String directoryPath){
+    private List<File> getFiles(String directoryPath) {
         File directory = new File(directoryPath);
         List<File> fileList = Arrays.asList(directory.listFiles());
         Collections.sort(fileList, new Comparator<File>() {
@@ -103,10 +104,9 @@ public class OpenFileDialog extends AlertDialog.Builder {
                 if (file.isDirectory()) {
                     currentPath = file.getPath();
                     RebuildFiles(adapter);
-                }
-                else {
+                } else {
                     listener.OnSelectedFile(currentPath + "/" + file.getName()); // возвращаем полное имя выбранного файла
-                    
+
                 }
             }
         });
@@ -126,7 +126,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
     // получаем размеры экрана
     private static Display getDefaultDisplay(Context context) {
-        return ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
     }
 
     private static Point getScreenSize(Context context) {
@@ -139,12 +139,12 @@ public class OpenFileDialog extends AlertDialog.Builder {
         return getScreenSize(context).y;
     }
 
-    private  int getItemHeight(Context context) {
+    private int getItemHeight(Context context) {
         TypedValue value = new TypedValue();
         DisplayMetrics metrics = new DisplayMetrics();
         context.getTheme().resolveAttribute(android.R.attr.rowHeight, value, true);
         getDefaultDisplay(context).getMetrics(metrics);
-        return (int)TypedValue.complexToDimension(value.data, metrics);
+        return (int) TypedValue.complexToDimension(value.data, metrics);
     }
 
     // создаем кастомный текст заголовока
@@ -164,8 +164,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
         int screenWidth = getScreenSize(getContext()).x;
         int maxWidth = (int) (screenWidth * 0.99);
         if (getTextWidth(titleText, title.getPaint()) > maxWidth) {
-            while (getTextWidth("..." + titleText, title.getPaint()) > maxWidth)
-            {
+            while (getTextWidth("..." + titleText, title.getPaint()) > maxWidth) {
                 int start = titleText.indexOf("/", 2);
                 if (start > 0)
                     titleText = titleText.substring(start);
@@ -228,25 +227,60 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            TextView view = (TextView) super.getView(position, convertView, parent);
+            //TextView view = (TextView) super.getView(position, convertView, parent);
+            convertView = LayoutInflater.from(getContext())
+                    .inflate(R.layout.list_file, null);
+            TextView nameText = convertView.findViewById(R.id.fileNameText);
+            TextView descriptionText = convertView.findViewById(R.id.fileDescritionText);
+            ImageView fileIcon = convertView.findViewById(R.id.fileIcon);
             File file = getItem(position);
-            if (file.isDirectory()){
-                view.setText(file.getName() + "/");
-                view.setTextColor(getContext().getResources().getColor(R.color.colorFolder));
-            }
-            else {
-                view.setText(file.getName());
-                view.setTextColor(getContext().getResources().getColor(R.color.colorDark));
+            descriptionText.setText(Helper.fileSize(file.length())); // размер файла
+            if (file.isDirectory()) {
+                nameText.setText(file.getName() + "/");
+                nameText.setTextColor(getContext().getResources().getColor(R.color.colorFolder));
+                fileIcon.setImageDrawable(getContext().getResources().getDrawable(R.drawable.folder));
+            } else {
+                nameText.setText(file.getName());
+                nameText.setTextColor(getContext().getResources().getColor(R.color.colorDark));
+                fileIcon.setImageDrawable(getExtensionIcon(getFileExtension(file)));
             }
 
-            return view;
+            return convertView;
+        }
+
+        // возврящает иконку файла по его расширению
+        private  Drawable getExtensionIcon(String extension) {
+            if (extension.equals(Constants.EXTENSION_JPG) || extension.equals(Constants.EXTENSION_PNG) || extension.equals(Constants.EXTENSION_GIF)) {
+                return getContext().getResources().getDrawable(R.drawable.image);
+            }
+            else if (extension.equals(Constants.EXTENSION_DOC) || extension.equals(Constants.EXTENSION_DOCX)) {
+                return getContext().getResources().getDrawable(R.drawable.word);
+            }
+            else if (extension.equals(Constants.EXTENSION_PDF)) {
+                return getContext().getResources().getDrawable(R.drawable.pdf);
+            }
+            else if (extension.equals(Constants.EXTENSION_APK)) {
+                return getContext().getResources().getDrawable(R.drawable.apk);
+            }
+            else return getContext().getResources().getDrawable(R.drawable.document);
+
+        }
+
+        // определяет расширение файла
+        private String getFileExtension(File file) {
+            String fileName = file.getName();
+            // если в имени файла есть точка и она не является первым символом в названии файла
+            if(fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
+                // то вырезаем все знаки после последней точки в названии файла, то есть ХХХХХ.txt -> txt
+                return fileName.substring(fileName.lastIndexOf(".")+1);
+                // в противном случае возвращаем заглушку, то есть расширение не найдено
+            else return "";
         }
     }
 
     // Слушатель выбора файла
-    public interface OpenDialogListener{
+    public interface OpenDialogListener {
         public void OnSelectedFile(String fileName);
     }
 }
-
 

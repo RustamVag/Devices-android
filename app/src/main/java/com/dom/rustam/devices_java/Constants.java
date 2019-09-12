@@ -23,6 +23,16 @@ public class Constants {
     public static String SEND_FILE_BLOCK = "-sendBlockFile";
     public static String GET_NEW_BLOCK = "-getNewBlock";
 
+    // Расширения файлов
+    public static String EXTENSION_TXT = "txt";
+    public static String EXTENSION_JPG = "jpg";
+    public static String EXTENSION_PNG = "png";
+    public static String EXTENSION_GIF = "gif";
+    public static String EXTENSION_DOC = "doc";
+    public static String EXTENSION_DOCX = "docx";
+    public static String EXTENSION_PDF = "pdf";
+    public static String EXTENSION_APK = "apk";
+
     // Общение между сервисом и активностями
     public final static String PARAM_PINTENT = "pendingIntent";
     public final static String PARAM_RESULT = "result";
