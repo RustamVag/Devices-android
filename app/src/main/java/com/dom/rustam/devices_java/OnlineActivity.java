@@ -41,12 +41,16 @@ public class OnlineActivity extends AppCompatActivity {
     ListView lv;
     Integer imgId;
     Context context;
+    Intent openFileIntent;
+    Device selectedDevice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_online);
         context = this;
+
+        openFileIntent = new Intent(this, OpenFileActivity.class);
 
         // Создаем список устройств и настраиваем его
         lv = findViewById(R.id.onlineList);
@@ -142,6 +146,18 @@ public class OnlineActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
+    @Override // Пришло имя выбранного файла
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (data == null) {return;}
+        String fileName = data.getStringExtra("fileName");
+        Device device = selectedDevice;
+        SharedFile sharedFile = new SharedFile(fileName, device.getId());
+        sharedFile.setSendingDevice(service.getDevice().getId()); // задаем id текущего устройства
+        sharedFile.generateBlocks();
+        //service.sendToServer(Constants.SEND_FILE + " " + device.getId() + " " + Helper.fileToString(fileName));
+        service.sendSaredFile(sharedFile);
+    }
+
 
     // Создаем класс адаптер для ListView
     private class DeviceAdapter extends ArrayAdapter<Device> {
@@ -180,6 +196,7 @@ public class OnlineActivity extends AppCompatActivity {
                 // Toast.makeText(PopupMenuDemoActivity.this,
                 // item.toString(), Toast.LENGTH_LONG).show();
                 // return true;
+                selectedDevice = devices.get(position);
                 switch (item.getItemId()) {
 
                     case R.id.action_call:
@@ -189,22 +206,17 @@ public class OnlineActivity extends AppCompatActivity {
                         return true;
                     case R.id.action_file:
                         //Toast.makeText(getApplicationContext(), "Отправка файла", Toast.LENGTH_SHORT).show();
-                        final OpenFileDialog fileDialog = new OpenFileDialog(context, OpenFileDialog.PATH_DEFAULT); // путь по умолчанию
+                       /* final OpenFileDialog fileDialog = new OpenFileDialog(context, OpenFileDialog.PATH_DEFAULT); // путь по умолчанию
                         final Dialog dialog = fileDialog.create();
                         // файл выбран
                         fileDialog.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
                             @Override
                             public void OnSelectedFile(String fileName) {
-                                Device device = devices.get(position);
-                                SharedFile sharedFile = new SharedFile(fileName, device.getId());
-                                sharedFile.setSendingDevice(service.getDevice().getId()); // задаем id текущего устройства
-                                sharedFile.generateBlocks();
-                                //service.sendToServer(Constants.SEND_FILE + " " + device.getId() + " " + Helper.fileToString(fileName));
-                                service.sendSaredFile(sharedFile);
                                 //TODO доработать отправку файла по частям
                             }
                         });
-                        dialog.show();
+                        dialog.show(); */
+                        startActivityForResult(openFileIntent, 5);
                         return true;
                     default:
                         return false;

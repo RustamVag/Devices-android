@@ -1,13 +1,14 @@
 package com.dom.rustam.devices_java;
 
-import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
-import android.support.constraint.ConstraintLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Display;
@@ -30,45 +31,35 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-// Класс - диалог для открытия файла
-// материал: https://habr.com/ru/post/203884/
-public class OpenFileDialog extends AlertDialog.Builder {
+public class OpenFileActivity extends AppCompatActivity {
 
     private String currentPath = Environment.getExternalStorageDirectory().getPath();
     private List<File> files = new ArrayList<File>();
     private TextView title;
     private ListView listView;
+    ImageView backItem;
     private int selectedIndex = -1;
-    private OpenDialogListener listener;
+    private OpenFileDialog.OpenDialogListener listener;
 
     // Пути
     public static String PATH_DOWNLOADS = Environment.getExternalStorageDirectory().getPath() + "/Devices-downloads"; // загрузки
     public static String PATH_DEFAULT = Environment.getExternalStorageDirectory().getPath();
 
-    // Конструктор
-    public OpenFileDialog(Context context, String path) {
-        super(context);
-        if (path.length() > 0) currentPath = path; // задаем папку если она указана
-        title = createTitle(context);
-        changeTitle();
-        View dialogView = LayoutInflater.from(getContext())
-                .inflate(R.layout.dialog_open_file, null);
-        //LinearLayout linearLayout = createMainLayout(context);
-        //linearLayout.addView(createBackItem(context));
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_open_file);
+        String path = PATH_DEFAULT;
+        title = findViewById(R.id.directoryText);
+        changeTitle(); // прописываем начальный путь
         files.addAll(getFiles(currentPath));
-        //listView = createListView(context);
-        listView = dialogView.findViewById(R.id.openFileList);
-        FileAdapter adapter = new FileAdapter(context, files);
+        createListView(this); // создаем список файлов и его обработчик
+        OpenFileActivity.FileAdapter adapter = new OpenFileActivity.FileAdapter(this, files);
         listView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
-
-        //linearLayout.addView(listView);
-        setCustomTitle(title)
-                .setView(dialogView)
-                .setPositiveButton(android.R.string.ok, null)
-                .setNegativeButton(android.R.string.cancel, null);
+        createBackItem(this); // кнопка вверх
+        setTitle("Выберите файл");
     }
-
 
     // ---------------------------- Основные методы ---------------------
 
@@ -76,6 +67,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
     private List<File> getFiles(String directoryPath) {
         File directory = new File(directoryPath);
         List<File> fileList = Arrays.asList(directory.listFiles());
+        int i = 5;
         Collections.sort(fileList, new Comparator<File>() {
             @Override
             public int compare(File file, File file2) {
@@ -101,31 +93,26 @@ public class OpenFileDialog extends AlertDialog.Builder {
 
     // Создание списка и его обработчиков
     private ListView createListView(Context context) {
-        ListView listView = new ListView(context);
+        listView = findViewById(R.id.files_list);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int index, long l) {
-                final ArrayAdapter<File> adapter = (FileAdapter) adapterView.getAdapter();
+                final ArrayAdapter<File> adapter = (OpenFileActivity.FileAdapter) adapterView.getAdapter();
                 File file = adapter.getItem(index);
                 if (file.isDirectory()) {
                     currentPath = file.getPath();
                     RebuildFiles(adapter);
                 } else {
-                    listener.OnSelectedFile(currentPath + "/" + file.getName()); // возвращаем полное имя выбранного файла
-
+                    // возвращаем полное имя выбранного файла
+                    Intent intent = new Intent();
+                    intent.putExtra("fileName", currentPath + "/" + file.getName());
+                    setResult(RESULT_OK, intent);
+                    finish();
                 }
             }
         });
         return listView;
-    }
-
-    // Настраиваем разметку диалога
-    private LinearLayout createMainLayout(Context context) {
-        LinearLayout linearLayout = new LinearLayout(context);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-        linearLayout.setMinimumHeight(getLinearLayoutMinHeight(context));
-        return linearLayout;
     }
 
 
@@ -154,21 +141,16 @@ public class OpenFileDialog extends AlertDialog.Builder {
         return (int) TypedValue.complexToDimension(value.data, metrics);
     }
 
-    // создаем кастомный текст заголовока
-    private TextView createTitle(Context context) {
-        TextView textView = createTextView(context, android.R.style.TextAppearance_DeviceDefault_DialogWindowTitle);
-        return textView;
-    }
-
     public int getTextWidth(String text, Paint paint) {
         Rect bounds = new Rect();
         paint.getTextBounds(text, 0, text.length(), bounds);
         return bounds.left + bounds.width() + 80;
     }
 
+    // Адаптируем заголовок под размеры экрана
     private void changeTitle() {
         String titleText = currentPath;
-        int screenWidth = getScreenSize(getContext()).x;
+        int screenWidth = getScreenSize(this).x;
         int maxWidth = (int) (screenWidth * 0.99);
         if (getTextWidth(titleText, title.getPaint()) > maxWidth) {
             while (getTextWidth("..." + titleText, title.getPaint()) > maxWidth) {
@@ -184,13 +166,12 @@ public class OpenFileDialog extends AlertDialog.Builder {
         }
     }
 
-    private TextView createBackItem(Context context) {
-        TextView textView = createTextView(context, android.R.style.TextAppearance_DeviceDefault_Small);
-        Drawable drawable = getContext().getResources().getDrawable(android.R.drawable.ic_menu_directions);
-        drawable.setBounds(0, 0, 60, 60);
-        textView.setCompoundDrawables(drawable, null, null, null);
-        textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        textView.setOnClickListener(new View.OnClickListener() {
+    private void createBackItem(Context context) {
+        backItem = findViewById(R.id.backItem);
+        Drawable drawable = this.getResources().getDrawable(R.drawable.buttonup);
+        drawable.setBounds(0, 0, 24, 24);
+        backItem.setImageDrawable(drawable);
+        backItem.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
@@ -198,28 +179,10 @@ public class OpenFileDialog extends AlertDialog.Builder {
                 File parentDirectory = file.getParentFile();
                 if (parentDirectory != null) {
                     currentPath = parentDirectory.getPath();
-                    RebuildFiles(((FileAdapter) listView.getAdapter()));
+                    RebuildFiles(((OpenFileActivity.FileAdapter) listView.getAdapter()));
                 }
             }
         });
-        return textView;
-    }
-
-    private TextView createTextView(Context context, int style) {
-        TextView textView = new TextView(context);
-        textView.setTextAppearance(context, style);
-        int itemHeight = getItemHeight(context);
-        textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, itemHeight));
-        textView.setMinHeight(itemHeight);
-        textView.setGravity(Gravity.CENTER_VERTICAL);
-        textView.setPadding(15, 0, 0, 0);
-        return textView;
-    }
-
-    // регистрируем слушаетля
-    public OpenFileDialog setOpenDialogListener(OpenDialogListener listener) {
-        this.listener = listener;
-        return this;
     }
 
 
@@ -232,6 +195,7 @@ public class OpenFileDialog extends AlertDialog.Builder {
             super(context, android.R.layout.simple_list_item_1, files);
         }
 
+        // Заполняем данные о файле
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             //TextView view = (TextView) super.getView(position, convertView, parent);
@@ -241,17 +205,18 @@ public class OpenFileDialog extends AlertDialog.Builder {
             TextView descriptionText = convertView.findViewById(R.id.fileDescritionText);
             ImageView fileIcon = convertView.findViewById(R.id.fileIcon);
             File file = getItem(position);
-            descriptionText.setText(Helper.fileSize(file.length())); // размер файла
             if (file.isDirectory()) {
                 nameText.setText(file.getName() + "/");
                 nameText.setTextColor(getContext().getResources().getColor(R.color.colorFolder));
                 fileIcon.setImageDrawable(getContext().getResources().getDrawable(R.drawable.folder));
+                descriptionText.setText(Constants.DESCRIPTION_DEFAULT);
             } else {
+                descriptionText.setText(Helper.fileSize(file.length())); // размер файла
                 nameText.setText(file.getName());
                 nameText.setTextColor(getContext().getResources().getColor(R.color.colorDark));
                 fileIcon.setImageDrawable(getExtensionIcon(getFileExtension(file)));
             }
-
+            //descriptionText.setWidth(100);
             return convertView;
         }
 
@@ -269,6 +234,12 @@ public class OpenFileDialog extends AlertDialog.Builder {
             else if (extension.equals(Constants.EXTENSION_APK)) {
                 return getContext().getResources().getDrawable(R.drawable.apk);
             }
+            if (extension.equals(Constants.EXTENSION_MP3) || extension.equals(Constants.EXTENSION_WAV) || extension.equals(Constants.EXTENSION_OGG) || extension.equals(Constants.EXTENSION_WMA)) {
+                return getContext().getResources().getDrawable(R.drawable.audio);
+            }
+            if (extension.equals(Constants.EXTENSION_MP4) || extension.equals(Constants.EXTENSION_MKV) || extension.equals(Constants.EXTENSION_AVI)) {
+                return getContext().getResources().getDrawable(R.drawable.video2);
+            }
             else return getContext().getResources().getDrawable(R.drawable.document);
 
         }
@@ -285,9 +256,4 @@ public class OpenFileDialog extends AlertDialog.Builder {
         }
     }
 
-    // Слушатель выбора файла
-    public interface OpenDialogListener {
-        public void OnSelectedFile(String fileName);
-    }
 }
-

@@ -22,6 +22,7 @@ public class Constants {
     public static String SEND_FILE_INFO = "-sendInfoFile";
     public static String SEND_FILE_BLOCK = "-sendBlockFile";
     public static String GET_NEW_BLOCK = "-getNewBlock";
+    public static String DESCRIPTION_DEFAULT = "         ";
 
     // Расширения файлов
     public static String EXTENSION_TXT = "txt";
@@ -32,7 +33,13 @@ public class Constants {
     public static String EXTENSION_DOCX = "docx";
     public static String EXTENSION_PDF = "pdf";
     public static String EXTENSION_APK = "apk";
-
+    public static String EXTENSION_MP3 = "mp3";
+    public static String EXTENSION_WAV = "wav";
+    public static String EXTENSION_OGG = "ogg";
+    public static String EXTENSION_WMA = "wma";
+    public static String EXTENSION_MP4 = "mp4";
+    public static String EXTENSION_MKV = "mkv";
+    public static String EXTENSION_AVI = "avi";
     // Общение между сервисом и активностями
     public final static String PARAM_PINTENT = "pendingIntent";
     public final static String PARAM_RESULT = "result";
