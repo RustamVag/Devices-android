@@ -10,4 +10,5 @@
     <color name= "colorBlack">#000000</color>
     <color name= "colorDark">#474946</color>
     <color name= "colorFolder">#DBAA48</color>
+    <color name="colorLightGray">#BBC</color>
 </resources>

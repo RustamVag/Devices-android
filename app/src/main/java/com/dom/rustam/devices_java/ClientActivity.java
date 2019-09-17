@@ -20,6 +20,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,7 +37,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class ClientActivity extends AppCompatActivity {
+public class ClientActivity extends AppCompatActivity  implements Theme{
 
     TextView logoText;
     ImageView logoIcon;
@@ -58,6 +59,7 @@ public class ClientActivity extends AppCompatActivity {
 
         logoText = findViewById(R.id.logoText);
         logoIcon = findViewById(R.id.modeLogo);
+
 
         // Создаем приемник сообщений
         br = new BroadcastReceiver() {
@@ -166,8 +168,7 @@ public class ClientActivity extends AppCompatActivity {
                 startActivity(intent2);
                 break;
             case R.id.downloads:
-                //String path = Environment.getExternalStorageDirectory().toString();
-                final OpenFileDialog fileDialog = new OpenFileDialog(context, OpenFileDialog.PATH_DOWNLOADS); // открываем загрузки приложения
+                /*final OpenFileDialog fileDialog = new OpenFileDialog(context, OpenFileDialog.PATH_DOWNLOADS); // открываем загрузки приложения
                 final Dialog dialog = fileDialog.create();
                 // файл выбран
                 fileDialog.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
@@ -177,7 +178,10 @@ public class ClientActivity extends AppCompatActivity {
                         Toast.makeText(context, fileName, Toast.LENGTH_SHORT).show();
                     }
                 });
-                dialog.show();
+                dialog.show(); */
+                Intent openFileIntent = new Intent(this, OpenFileActivity.class);
+                openFileIntent.putExtra("status", Constants.STATUS_BROWSE);
+                startActivityForResult(openFileIntent, 5);
                 break;
             case R.id.close:
                 Intent serviceIntent = new Intent(this, NetworkService.class);
@@ -199,6 +203,7 @@ public class ClientActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        setTheme();
     }
 
     @Override
@@ -206,6 +211,22 @@ public class ClientActivity extends AppCompatActivity {
         // кодить здесь
         super.onDestroy();
         //unregisterReceiver(br);
+    }
+
+    // Устанавливаем тему
+    @Override
+    public void setTheme() {
+        SharedPreferences pref = getSharedPreferences(Settings.Companion.getAPP_PREFERENCES(), Context.MODE_PRIVATE);
+        Settings settings = new Settings("", false, pref); //Не по красоте
+        settings.loadSettings();
+        ConstraintLayout layout = findViewById(R.id.relativeLayout);
+
+        if (settings.getDarkTheme() == false) {
+            layout.setBackground(getResources().getDrawable(R.color.colorLightGray)); // меняем цвет фона
+        }
+        else {
+            layout.setBackground(getResources().getDrawable(R.color.colorDark));
+        }
     }
 
 }

@@ -8,7 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -27,7 +29,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OnlineActivity extends AppCompatActivity {
+public class OnlineActivity extends AppCompatActivity implements Theme{
 
     private static List<Device> devices = new ArrayList<Device>();
     String address;
@@ -43,11 +45,13 @@ public class OnlineActivity extends AppCompatActivity {
     Context context;
     Intent openFileIntent;
     Device selectedDevice;
+    boolean darkTheme;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_online);
+        //setTheme();
         context = this;
 
         openFileIntent = new Intent(this, OpenFileActivity.class);
@@ -136,6 +140,7 @@ public class OnlineActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        setTheme(); // устанавливаем тему здесь
     }
 
     @Override
@@ -158,23 +163,47 @@ public class OnlineActivity extends AppCompatActivity {
         service.sendSaredFile(sharedFile);
     }
 
+    // Устанавливаем тему
+    @Override
+    public void setTheme() {
+        SharedPreferences pref = getSharedPreferences(Settings.Companion.getAPP_PREFERENCES(), Context.MODE_PRIVATE);
+        Settings settings = new Settings("", false, pref); //Не по красоте
+        settings.loadSettings();
+        ConstraintLayout layout = findViewById(R.id.onlineLayout);
+
+        if (settings.getDarkTheme() == false) {
+            layout.setBackground(getResources().getDrawable(R.color.colorLightGray)); // меняем цвет фона
+        }
+        else {
+            layout.setBackground(getResources().getDrawable(R.color.colorDark));
+        }
+        this.darkTheme = settings.getDarkTheme();
+    }
+
 
     // Создаем класс адаптер для ListView
-    private class DeviceAdapter extends ArrayAdapter<Device> {
+    private class DeviceAdapter extends ArrayAdapter<Device>{
+
+        View currentView;
 
         public DeviceAdapter(Context context) {
             super(context, android.R.layout.simple_list_item_2, devices);
+            setTheme();
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-
             View view = convertView;
             if (view == null) {
                 view = LayoutInflater.from(getContext())
                         .inflate(R.layout.list_item, null);
             }
-
+            if (darkTheme) {
+                view.setBackground(getResources().getDrawable(R.color.colorDark)); // меняем цвет фона
+            }
+            else {
+                view.setBackground(getResources().getDrawable(R.color.colorLightGray));
+            }
             Device device = getItem(position);
             TextView tvName = (TextView) view.findViewById(R.id.list_item_name);
             ImageView dev = (ImageView) view.findViewById(R.id.devImage);
@@ -183,6 +212,7 @@ public class OnlineActivity extends AppCompatActivity {
 
             return view;
         }
+
     }
 
     // Всплывающее меню для устройства
@@ -216,6 +246,7 @@ public class OnlineActivity extends AppCompatActivity {
                             }
                         });
                         dialog.show(); */
+                        openFileIntent.putExtra("status", Constants.STATUS_CHOOSE_FILE);
                         startActivityForResult(openFileIntent, 5);
                         return true;
                     default:

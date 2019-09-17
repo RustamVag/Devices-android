@@ -24,6 +24,10 @@ public class Constants {
     public static String GET_NEW_BLOCK = "-getNewBlock";
     public static String DESCRIPTION_DEFAULT = "         ";
 
+    // Режимы открытия папок
+    public static int STATUS_CHOOSE_FILE = 1;
+    public static int STATUS_BROWSE = 2;
+
     // Расширения файлов
     public static String EXTENSION_TXT = "txt";
     public static String EXTENSION_JPG = "jpg";

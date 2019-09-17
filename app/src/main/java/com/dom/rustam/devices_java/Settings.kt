@@ -14,6 +14,7 @@ class Settings (var name:String, var _notify:Boolean, var pref:SharedPreferences
         val APP_PREFERENCES_NOTIFY:String = "notify"
         val APP_PREFERENCES_COLOR:String = "color"
         val APP_PREFERENCES_SOUND:String = "sound"
+        val APP_PREFERENCES_DARK_THEME:String = "darkTheme"
     }
 
     lateinit var mSettings: SharedPreferences
@@ -22,6 +23,7 @@ class Settings (var name:String, var _notify:Boolean, var pref:SharedPreferences
     var notify:Boolean
     var color:Int
     var sound:Boolean
+    var darkTheme:Boolean
 
     init {
         deviceName = name
@@ -29,6 +31,7 @@ class Settings (var name:String, var _notify:Boolean, var pref:SharedPreferences
         mSettings = pref
         color = 0
         sound = true
+        darkTheme = true
     }
 
     // Сохраняем настройки
@@ -38,6 +41,7 @@ class Settings (var name:String, var _notify:Boolean, var pref:SharedPreferences
         editor.putBoolean(APP_PREFERENCES_NOTIFY, notify)
         editor.putBoolean(APP_PREFERENCES_SOUND, sound)
         editor.putInt(APP_PREFERENCES_COLOR, color)
+        editor.putBoolean(APP_PREFERENCES_DARK_THEME, darkTheme)
         editor.apply()
     }
 
@@ -54,7 +58,11 @@ class Settings (var name:String, var _notify:Boolean, var pref:SharedPreferences
         if (mSettings.contains(APP_PREFERENCES_COLOR)) {
             color = mSettings.getInt(APP_PREFERENCES_COLOR, 0) // получаем цвет
         }
+        if (mSettings.contains(APP_PREFERENCES_DARK_THEME)) {
+            darkTheme = mSettings.getBoolean(APP_PREFERENCES_DARK_THEME, true) // уведомления
+        }
     }
+
 
 
 }

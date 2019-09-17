@@ -39,7 +39,8 @@ public class OpenFileActivity extends AppCompatActivity {
     private ListView listView;
     ImageView backItem;
     private int selectedIndex = -1;
-    private OpenFileDialog.OpenDialogListener listener;
+    private int status;
+
 
     // Пути
     public static String PATH_DOWNLOADS = Environment.getExternalStorageDirectory().getPath() + "/Devices-downloads"; // загрузки
@@ -49,7 +50,16 @@ public class OpenFileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_open_file);
-        String path = PATH_DEFAULT;
+        status = getIntent().getIntExtra("status", 0);
+        if (status == Constants.STATUS_CHOOSE_FILE) {
+            currentPath = PATH_DEFAULT;
+            setTitle("Выберите файл");
+        }
+        if (status == Constants.STATUS_BROWSE) {
+            currentPath = PATH_DOWNLOADS;
+            setTitle("Загрузки");
+        }
+
         title = findViewById(R.id.directoryText);
         changeTitle(); // прописываем начальный путь
         files.addAll(getFiles(currentPath));
@@ -58,7 +68,9 @@ public class OpenFileActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
         createBackItem(this); // кнопка вверх
-        setTitle("Выберите файл");
+
+
+
     }
 
     // ---------------------------- Основные методы ---------------------
@@ -104,11 +116,13 @@ public class OpenFileActivity extends AppCompatActivity {
                     currentPath = file.getPath();
                     RebuildFiles(adapter);
                 } else {
-                    // возвращаем полное имя выбранного файла
-                    Intent intent = new Intent();
-                    intent.putExtra("fileName", currentPath + "/" + file.getName());
-                    setResult(RESULT_OK, intent);
-                    finish();
+                    if (status == Constants.STATUS_CHOOSE_FILE) {
+                        // возвращаем полное имя выбранного файла
+                        Intent intent = new Intent();
+                        intent.putExtra("fileName", currentPath + "/" + file.getName());
+                        setResult(RESULT_OK, intent);
+                        finish();
+                    }
                 }
             }
         });
