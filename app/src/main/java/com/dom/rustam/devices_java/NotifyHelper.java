@@ -23,6 +23,8 @@ public class NotifyHelper {
     private SoundPool mSoundPool;
     private AssetManager mAssetManager;
     private  int callSound; // Id звука звонка
+    private int newDeviceSound;
+    private int deviceLeaveSound;
     private  int mStreamID;
     private Context context;
     NotificationManager notificationManager;
@@ -48,6 +50,8 @@ public class NotifyHelper {
 
         mAssetManager = context.getAssets();
         callSound = loadSound("call.ogg");
+        newDeviceSound = loadSound("newdevice.ogg");
+        deviceLeaveSound = loadSound("deviceleave.ogg");
         mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
             public void onLoadComplete(SoundPool soundPool, int i, int i1) {
@@ -78,8 +82,16 @@ public class NotifyHelper {
 
     // Вызов звонка
     public void call() {
-        // inQueue = callSound;
         playSound(callSound);
+    }
+
+    // Устройство подключилось
+    public void newDevice() {
+        playSound(newDeviceSound);
+    }
+
+    public void deviceLeave() {
+        playSound(deviceLeaveSound);
     }
 
     // Инициализация SoundPool

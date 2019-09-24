@@ -157,7 +157,7 @@ public class NsdHelper {
                     discoverServices(); // Запускаем обнаружение сетей
                 }
                 else {
-                    Toast.makeText(mContext, "Сервис " + nsdServiceInfo.getServiceName() + " запущен", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(mContext, "Сервис " + nsdServiceInfo.getServiceName() + " запущен", Toast.LENGTH_SHORT).show();
                     uiMessage = Constants.LOGO_SERVER;
                     service.updateLogo(uiMessage);
                     service.startServer();

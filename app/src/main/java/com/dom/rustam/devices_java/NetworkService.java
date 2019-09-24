@@ -359,10 +359,16 @@ public class NetworkService extends Service {
         if (beginAs(message, Constants.ONLINE)) { // Запрос онлайна
             message = message.substring(Constants.ONLINE.length() + 1); // Убираем -online из строки сообщения
             Online online = new Online(message);
+            int oldOnline = helper.online.devices.size(); // записываем старый онлайн
             helper.online = online;
+            if (oldOnline != 0) { // если мы не только что подключились к сети
+                if (oldOnline < helper.online.devices.size())
+                    notify.newDevice(); // звук нового устройства в сети
+                if (oldOnline > helper.online.devices.size())
+                    notify.deviceLeave(); // другое устройство вышло из сети
+            }
             sendBroadcast(Constants.BROADCAST_UPDATE_ONLINE);
         } else if (beginAs(message, Constants.DEVICE_CALL)) {
-            sendBroadcast(Constants.BROADCAST_CALL);
             notify.call();
         }
         else if (beginAs(message, Constants.DEVICE_ID)) {
@@ -448,13 +454,10 @@ public class NetworkService extends Service {
                         helper.online.devices.add(dev);
                     }
 
-                    int i = 5;
-
                     // Отправляем каждому клиенту данные об онлайне
                     for (Device device : helper.online.devices) {
                         mServer.sendMessageTo(device.getId(), Constants.ONLINE + " " + helper.online.toXML());
                     }
-                    i = 5;
                 }
             });
             mServer.start();
