@@ -62,9 +62,6 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
         lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
-               // Toast.makeText(getApplicationContext(), "Долгое нажатие ", Toast.LENGTH_SHORT).show();
-                //Device device = devices.get(position);
-                //service.sendToServer(Constants.DEVICE_CALL + " " + Integer.toString(device.getId()));
                 showPopupMenu(view, position); // всплывающее меню
                 return true;
             }
@@ -73,7 +70,6 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View itemClicked, int position, long id) {
-               // Toast.makeText(getApplicationContext(), "Обычное нажатие", Toast.LENGTH_SHORT).show();
                 Device device = devices.get(position);
                 Intent intent = new Intent(OnlineActivity.this, DeviceActivity.class)
                         .putExtra(Constants.DEVICE_NAME, device.getName())
@@ -83,12 +79,11 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
             }
         });
 
-
-
         imgId = R.drawable.dev; // Id картинки в ресурсах для ListView
 
+
+        // Принимаем сообщения от сервиса
         br = new BroadcastReceiver() {
-            // Принимаем сообщения от сервиса
             @Override
             public void onReceive(Context context, Intent intent) {
                 String result = intent.getStringExtra(Constants.PARAM_RESULT);
@@ -99,11 +94,6 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
                     adapter = new DeviceAdapter(getApplicationContext());
                     adapter.notifyDataSetChanged();
                     lv.setAdapter(adapter);
-                } else if (result.contains(Constants.BROADCAST_CALL)) {
-                    // Toast.makeText(getApplicationContext(), "Звонок", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    //Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
                 }
             }
         };
@@ -112,7 +102,8 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
         IntentFilter intFilt = new IntentFilter(Constants.BROADCAST_ONLINE);
         registerReceiver(br, intFilt);
 
-        // Настраиваем подключение к серверу
+
+        // Настраиваем подключение к службе
         serviceIntent = new Intent(this, NetworkService.class);
         sConn = new ServiceConnection() {
             @Override
@@ -215,7 +206,9 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
 
     }
 
-    // Всплывающее меню для устройства
+
+    // ------------ Всплывающее меню для устройства ---------------------------
+
     private void showPopupMenu(View v, final int position) {
         PopupMenu popupMenu = new PopupMenu(this, v);
         popupMenu.inflate(R.menu.popup_menu); // Для Android 4.0
@@ -230,24 +223,18 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
                 switch (item.getItemId()) {
 
                     case R.id.action_call:
-                        //Toast.makeText(getApplicationContext(), "Вызов", Toast.LENGTH_SHORT).show();
                         final Device device = devices.get(position);
                         service.sendToServer(Constants.DEVICE_CALL + " " + Integer.toString(device.getId()));
                         return true;
                     case R.id.action_file:
-                        //Toast.makeText(getApplicationContext(), "Отправка файла", Toast.LENGTH_SHORT).show();
-                       /* final OpenFileDialog fileDialog = new OpenFileDialog(context, OpenFileDialog.PATH_DEFAULT); // путь по умолчанию
-                        final Dialog dialog = fileDialog.create();
-                        // файл выбран
-                        fileDialog.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
-                            @Override
-                            public void OnSelectedFile(String fileName) {
-                                //TODO доработать отправку файла по частям
-                            }
-                        });
-                        dialog.show(); */
                         openFileIntent.putExtra("status", Constants.STATUS_CHOOSE_FILE);
                         startActivityForResult(openFileIntent, 5);
+                        return true;
+                    case R.id.action_kick:
+                        if ((service.status == service.STATUS_SERVER) && (selectedDevice.getId() != service.getDevice().getId())) {
+                            service.mServer.kickDevice(devices.get(position)); // отключаем другое выбранное устройство если мы сервер
+
+                        }
                         return true;
                     default:
                         return false;

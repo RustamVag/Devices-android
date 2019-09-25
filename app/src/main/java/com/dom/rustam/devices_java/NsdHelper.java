@@ -130,7 +130,7 @@ public class NsdHelper {
                 address = serviceInfo.getHost().toString().substring(1);
                 service.address = address;
 
-                Toast.makeText(mContext, "Подключено к " + serviceInfo.getHost().toString().substring(1), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(mContext, "Подключено к " + serviceInfo.getHost().toString().substring(1), Toast.LENGTH_SHORT).show();
                 uiMessage = Constants.LOGO_CLIENT;
                 // Если устройство с  режима сервера переходит на клиент
                 if (service.status == NetworkService.STATUS_SERVER) {

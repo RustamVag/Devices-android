@@ -424,6 +424,9 @@ public class NetworkService extends Service {
             }
 
         }
+        else if (beginAs(message, Constants.CLOSED_CONNECTION)) {
+            stopSelf(); // вырубаем службу если сервер закрыл соединение
+        }
 
     }
 

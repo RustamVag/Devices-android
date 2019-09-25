@@ -99,8 +99,7 @@ public class DeviceManager extends Thread {
     public boolean hasCommand(String message) {
         if (message != null) {
             if (message.contains(Constants.CLOSED_CONNECTION)) {
-                close();
-                managerDelegate.userDisconnected(this, device.getName());
+                close(device);
                 return true;
             } else if (message.split(" ")[0].contains(Constants.DEVICE_CONNECTED)) { // Если сообщение начинается со слова -connect
                 message = message.substring(Constants.DEVICE_CONNECTED.length()+1); // Убираем -connect из строки сообщения
@@ -115,6 +114,12 @@ public class DeviceManager extends Thread {
             }
         }
         return false;
+    }
+
+    // Отлючение устройства от сети
+    public void close(Device device) {
+        close();
+        managerDelegate.userDisconnected(this, device.getName());
     }
 
     // Запускаем таймер проверки пинга

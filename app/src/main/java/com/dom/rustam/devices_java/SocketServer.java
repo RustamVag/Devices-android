@@ -86,6 +86,13 @@ public class SocketServer extends Thread implements DeviceManager.UserManagerDel
         }
     }
 
+    // Отключить устройство от сервера
+    public void kickDevice(Device device) {
+        sendMessageTo(device.getId(), Constants.CLOSED_CONNECTION);
+        DeviceManager dm = findDeviceManagerById(device.getId());
+        dm.close(device);
+    }
+
     public void sendToAll(String msg) {
         if (connectedDevices != null) {
             for (DeviceManager userManager : connectedDevices) {
