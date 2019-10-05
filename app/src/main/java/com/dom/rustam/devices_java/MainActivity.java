@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements Theme{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         // создаем папку загрузок если ее нет
+        Helper.verifyStoragePermissions(this);
         File folder = new File(Environment.getExternalStorageDirectory() +
                 File.separator + "Devices-downloads");
         if (!folder.exists()) {

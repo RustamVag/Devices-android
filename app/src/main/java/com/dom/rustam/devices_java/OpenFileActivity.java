@@ -59,7 +59,6 @@ public class OpenFileActivity extends AppCompatActivity {
             currentPath = PATH_DOWNLOADS;
             setTitle("Загрузки");
         }
-
         title = findViewById(R.id.directoryText);
         changeTitle(); // прописываем начальный путь
         files.addAll(getFiles(currentPath));
@@ -68,6 +67,8 @@ public class OpenFileActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
         createBackItem(this); // кнопка вверх
+
+        //TODO в корень добавить внутренню память и SD карту
 
 
 

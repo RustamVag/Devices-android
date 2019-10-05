@@ -121,7 +121,7 @@ public class SharedFile {
             byte[] blockData = new byte[blockSize];
             System.arraycopy(this.data, i, blockData,0, blockSize); // копируем часть массива в другой
             blocks.add(new FileBlock(id, this.fileId, blockData));
-            id++; //TODO найти ошибку
+            id++;
         }
         this.blocksCount = this.blocks.size();
     }

@@ -11,6 +11,8 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.support.constraint.ConstraintLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -20,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -46,6 +49,8 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
     Intent openFileIntent;
     Device selectedDevice;
     boolean darkTheme;
+    boolean fragmentMode;
+    FragmentManager fm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,12 +75,35 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View itemClicked, int position, long id) {
-                Device device = devices.get(position);
+                selectedDevice = devices.get(position);
+
+                /* // Активити
                 Intent intent = new Intent(OnlineActivity.this, DeviceActivity.class)
                         .putExtra(Constants.DEVICE_NAME, device.getName())
                         .putExtra(Constants.DEVICE_COLOR, device.getColor())
                         .putExtra(Constants.DEVICE_POSITION, device.getPosition());
-                startActivity(intent);
+                startActivity(intent); */
+
+                // Фрагмент
+                fm = getSupportFragmentManager();
+                Fragment fragment = fm.findFragmentById(R.id.fragment_container);
+                if (fragment == null) {
+                    fragment = new DeviceFragment();
+                    fragmentMode = true; // Указываем что отображается фрагмент
+                    fm.beginTransaction()
+                            .add(R.id.fragment_container, fragment)
+                            .commit();
+                }
+                else { // Если фрагмент скрыт то показываем его
+                    if (!fragment.isVisible()) {
+                        ((DeviceFragment) fragment).buildView(); // обновляем вид фрагмента
+                        fm.beginTransaction()
+                                .show(fragment)
+                                .commit();
+                        fragmentMode = true;
+                    }
+                }
+
             }
         });
 
@@ -123,6 +151,29 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
         bindService(serviceIntent, sConn, BIND_AUTO_CREATE); // Пока что
     }
 
+    public Device getSelectedDevice() { return this.selectedDevice; } // выбранное устройство в списке
+
+    // Нажата кнопка назад
+    @Override
+    public void onBackPressed() {
+        // super.onBackPressed();
+        // Просто скрыть фрагмент если он отображается
+        if (fragmentMode) {
+            Fragment fragment = fm.findFragmentById(R.id.fragment_container);
+            if (fragment != null && fragment.isVisible()) {
+                fm.beginTransaction()
+                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                        .hide(fragment)
+                        .commit();
+            }
+            fragmentMode = false;
+        }
+        else {
+            finish();
+        }
+
+    }
+
     @Override protected void onPause() {
         // кодить здесь
         super.onPause();
@@ -160,7 +211,7 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
         SharedPreferences pref = getSharedPreferences(Settings.Companion.getAPP_PREFERENCES(), Context.MODE_PRIVATE);
         Settings settings = new Settings("", false, pref); //Не по красоте
         settings.loadSettings();
-        ConstraintLayout layout = findViewById(R.id.onlineLayout);
+        LinearLayout layout = findViewById(R.id.onlineLayout);
 
         if (settings.getDarkTheme() == false) {
             layout.setBackground(getResources().getDrawable(R.color.colorLightGray)); // меняем цвет фона
@@ -224,16 +275,15 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
 
                     case R.id.action_call:
                         final Device device = devices.get(position);
-                        service.sendToServer(Constants.DEVICE_CALL + " " + Integer.toString(device.getId()));
+                        callAction(device); // звуковой сигнал устройству
                         return true;
                     case R.id.action_file:
-                        openFileIntent.putExtra("status", Constants.STATUS_CHOOSE_FILE);
-                        startActivityForResult(openFileIntent, 5);
+                        sendFileAction(); // отправка файла
                         return true;
                     case R.id.action_kick:
                         if ((service.status == service.STATUS_SERVER) && (selectedDevice.getId() != service.getDevice().getId())) {
                             service.mServer.kickDevice(devices.get(position)); // отключаем другое выбранное устройство если мы сервер
-
+                            // TODO доработать реакцию на закрытие соединения в клиенте
                         }
                         return true;
                     default:
@@ -243,6 +293,20 @@ public class OnlineActivity extends AppCompatActivity implements Theme{
         });
         popupMenu.show();
     }
+
+    // ---------------------- Действия с устройством ------------------
+
+    // звуковой сигнал
+    public void callAction(Device device) {
+        service.sendToServer(Constants.DEVICE_CALL + " " + Integer.toString(device.getId()));
+    }
+
+    // передать файл
+    public void sendFileAction(){
+        openFileIntent.putExtra("status", Constants.STATUS_CHOOSE_FILE);
+        startActivityForResult(openFileIntent, 5);
+    }
+
 }
 
 

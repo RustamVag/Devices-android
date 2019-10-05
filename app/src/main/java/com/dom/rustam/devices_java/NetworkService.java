@@ -54,7 +54,7 @@ public class NetworkService extends Service {
     public static int STATUS_STARTING = 4;
     public static int STATUS_RECONNECT = 5;
     int status = STATUS_OFFLINE; // Текущее состояние службы
-    int currentPosition = 0; // Текущее проложение девайса
+    int currentPosition = 2; // Начальное текущее проложение девайса в руке
 
     String CHANNEL_ID = "foreground";
 
@@ -408,7 +408,6 @@ public class NetworkService extends Service {
                     recivingFile.save(Environment.getExternalStorageDirectory().getPath() + Constants.PATH_DOWNLOADS); // сохраняем файл в указанной папке
                     sendBroadcast(Constants.RECIVE_FILE); // сообщение о принятии файла
                     recivingFile = null; // освобождаем память эксперимент
-                    //TODO проверить выполнение, я здесь
                 }
             }
         }
