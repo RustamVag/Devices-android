@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,36 +7,31 @@
 
     <ImageView
         android:id="@+id/fileIcon"
-        android:layout_width="0dp"
-        android:layout_height="45dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="11dp"
-        app:layout_constraintBottom_toBottomOf="@+id/fileNameText"
-        app:layout_constraintEnd_toStartOf="@+id/fileDescritionText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fileNameText"
-        app:srcCompat="@android:drawable/sym_contact_card"
-        tools:srcCompat="@drawable/document" />
+        android:layout_width="36dp"
+        android:layout_height="40dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        app:srcCompat="@drawable/document" />
 
     <TextView
         android:id="@+id/fileNameText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Название файла"
-        android:textSize="18dp"
-        app:layout_constraintStart_toStartOf="@+id/fileDescritionText"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="2dp"
+        android:layout_toEndOf="@+id/fileIcon"
+        android:text="Имя файла" />
 
     <TextView
         android:id="@+id/fileDescritionText"
-        android:layout_width="55dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:layout_marginEnd="242dp"
-        android:text="100,0 MB"
-        android:textSize="12dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/fileIcon"
-        app:layout_constraintTop_toBottomOf="@+id/fileNameText" />
-</android.support.constraint.ConstraintLayout>
+        android:layout_below="@+id/fileNameText"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="3dp"
+        android:layout_toEndOf="@+id/fileIcon"
+        android:text="Размер файла"
+        android:textSize="12dp" />
+</RelativeLayout>
