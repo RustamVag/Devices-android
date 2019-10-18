@@ -35,6 +35,8 @@ public class OpenFileActivity extends AppCompatActivity {
 
     private String currentPath = Environment.getExternalStorageDirectory().getPath();
     private List<File> files = new ArrayList<File>();
+    private List<File> rootFolder = new ArrayList<File>(); // в списке внутренняя память и флеш карта если есть
+    ArrayList<StorageHelper.MountDevice> storages; // хранилища
     private TextView title;
     private ListView listView;
     ImageView backItem;
@@ -61,6 +63,7 @@ public class OpenFileActivity extends AppCompatActivity {
         }
         title = findViewById(R.id.directoryText);
         changeTitle(); // прописываем начальный путь
+        rootFolder = getStorageDevices(); // список накопителей
         files.addAll(getFiles(currentPath));
         createListView(this); // создаем список файлов и его обработчик
         OpenFileActivity.FileAdapter adapter = new OpenFileActivity.FileAdapter(this, files);
@@ -198,6 +201,19 @@ public class OpenFileActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    // Возвращает список накопителей
+    private List<File> getStorageDevices() {
+        List<File> folder = new ArrayList<File>();
+        folder.add(new File(PATH_DEFAULT)); // внутренняя память
+       storages = StorageHelper.getInstance()
+                .getRemovableMountedDevices();
+       if (storages.size() != 0) {
+           String storagePath = storages.get(0).getPath();
+           folder.add(new File(storagePath)); // sd карта
+       }
+       return folder;
     }
 
 
