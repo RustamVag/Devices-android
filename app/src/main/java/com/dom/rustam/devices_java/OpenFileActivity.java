@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.Gravity;
@@ -35,7 +36,7 @@ public class OpenFileActivity extends AppCompatActivity {
 
     private String currentPath = Environment.getExternalStorageDirectory().getPath();
     private List<File> files = new ArrayList<File>();
-    private List<File> rootFolder = new ArrayList<File>(); // в списке внутренняя память и флеш карта если есть
+    private List<File> rootFolder = new ArrayList<File>(); // в списке внутренняя память и флеш карта если есть\
     ArrayList<StorageHelper.MountDevice> storages; // хранилища
     private TextView title;
     private ListView listView;
@@ -46,7 +47,9 @@ public class OpenFileActivity extends AppCompatActivity {
 
     // Пути
     public static String PATH_DOWNLOADS = Environment.getExternalStorageDirectory().getPath() + "/Devices-downloads"; // загрузки
-    public static String PATH_DEFAULT = Environment.getExternalStorageDirectory().getPath();
+    public static String PATH_DEFAULT = Environment.getExternalStorageDirectory().getPath(); // корень внитренней памяти
+    public String PATH_SDCARD; // корень sd-карты
+    public final String PATH_ROOT = "/rootFolder"; // список хранилищ
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +66,7 @@ public class OpenFileActivity extends AppCompatActivity {
         }
         title = findViewById(R.id.directoryText);
         changeTitle(); // прописываем начальный путь
-        rootFolder = getStorageDevices(); // список накопителей
+        rootFolder = getStorageDevices(); // список накопителей;
         files.addAll(getFiles(currentPath));
         createListView(this); // создаем список файлов и его обработчик
         OpenFileActivity.FileAdapter adapter = new OpenFileActivity.FileAdapter(this, files);
@@ -101,9 +104,16 @@ public class OpenFileActivity extends AppCompatActivity {
     // Обновляем список файлов
     private void RebuildFiles(ArrayAdapter<File> adapter) {
         files.clear();
-        files.addAll(getFiles(currentPath));
+        if (currentPath.equals(PATH_ROOT)) { // если корневая папка
+            files.addAll(rootFolder);
+        }
+        else if (getFiles(currentPath) == null){
+            // пустая папка, ничего не делаем
+        }
+        else {
+            files.addAll(getFiles(currentPath));
+        }
         adapter.notifyDataSetChanged();
-        //title.setText(currentPath);
         changeTitle();
     }
 
@@ -194,10 +204,25 @@ public class OpenFileActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 File file = new File(currentPath);
-                File parentDirectory = file.getParentFile();
-                if (parentDirectory != null) {
-                    currentPath = parentDirectory.getPath();
+                if ( (currentPath.equals(PATH_DEFAULT)) || (currentPath.equals(PATH_SDCARD)) ) {
+                    currentPath = PATH_ROOT;
                     RebuildFiles(((OpenFileActivity.FileAdapter) listView.getAdapter()));
+                }
+                else if (currentPath.equals(PATH_ROOT)) {
+                    // корневая папка, выше не поднимаемся
+                }
+                else {
+
+                    File parentDirectory = file.getParentFile();
+                    if (parentDirectory != null) {
+                        if (parentDirectory.listFiles() == null) {
+                            parentDirectory = parentDirectory.getParentFile();
+                        }
+                        if (parentDirectory != null) {
+                            currentPath = parentDirectory.getPath();
+                            RebuildFiles(((OpenFileActivity.FileAdapter) listView.getAdapter()));
+                        }
+                    }
                 }
             }
         });
@@ -207,13 +232,49 @@ public class OpenFileActivity extends AppCompatActivity {
     private List<File> getStorageDevices() {
         List<File> folder = new ArrayList<File>();
         folder.add(new File(PATH_DEFAULT)); // внутренняя память
-       storages = StorageHelper.getInstance()
-                .getRemovableMountedDevices();
-       if (storages.size() != 0) {
-           String storagePath = storages.get(0).getPath();
-           folder.add(new File(storagePath)); // sd карта
-       }
+        String sdCardPath = getSDCardPath();
+        PATH_SDCARD = sdCardPath;
+        folder.add(new File(sdCardPath)); // SD карта
        return folder;
+    }
+
+    // Пробуем получить путь к SD карте
+    private String getSDCardPath() {
+        final String state = Environment.getExternalStorageState();
+        String TAG = "Debug: ";
+
+        if ( Environment.MEDIA_MOUNTED.equals(state) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state) ) {  // we can read the External Storage...
+            //Retrieve the primary External Storage:
+            final File primaryExternalStorage = Environment.getExternalStorageDirectory();
+
+            //Retrieve the External Storages root directory:
+            String externalStorageRootDir;
+            if ( (externalStorageRootDir = primaryExternalStorage.getParent()) == null ) {  // no parent...
+                Log.d(TAG, "External Storage: " + primaryExternalStorage + "\n");
+            }
+            else {
+                File externalStorageRoot = new File( externalStorageRootDir );
+                File[] files = externalStorageRoot.listFiles();
+                if (files == null) {
+                    if ( (externalStorageRootDir = externalStorageRoot.getParent()) == null ) {  // no parent...
+                        Log.d(TAG, "External Storage: " + primaryExternalStorage + "\n");
+                    }
+                    else {
+                        externalStorageRoot = new File( externalStorageRootDir );
+                        files = externalStorageRoot.listFiles();
+                        int i = 5;
+                    }
+                }
+                int i = 5;
+                for ( final File file : files ) {
+                    if ( file.isDirectory() && file.canRead() && (file.listFiles().length > 0) ) {  // it is a real directory (not a USB drive)...
+                        Log.d(TAG, "External Storage: " + file.getAbsolutePath() + "\n");
+                        return file.getAbsolutePath();
+                    }
+                }
+            }
+        }
+        return "ERROR";
     }
 
 
@@ -238,6 +299,8 @@ public class OpenFileActivity extends AppCompatActivity {
             File file = getItem(position);
             if (file.isDirectory()) {
                 nameText.setText(file.getName() + "/");
+                if (file.getPath().equals(PATH_DEFAULT)) nameText.setText("Внутренняя память");
+                if (file.getPath().equals(PATH_SDCARD)) nameText.setText("SD карта");
                 nameText.setTextColor(getContext().getResources().getColor(R.color.colorFolder));
                 fileIcon.setImageDrawable(getContext().getResources().getDrawable(R.drawable.folder));
                 descriptionText.setText(Constants.DESCRIPTION_DEFAULT);
